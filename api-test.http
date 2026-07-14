@@ -1,0 +1,21 @@
+### 1. Consultar el saldo de Alice (ID 1)
+GET http://localhost:8080/api/cuentas/1
+Accept: application/json
+
+###
+
+### 2. Consultar el saldo de Bob (ID 2)
+GET http://localhost:8080/api/cuentas/2
+Accept: application/json
+
+###
+
+### 3. Hacer una transferencia de 100 de Alice a Bob
+POST http://localhost:8080/api/cuentas/transferir
+Content-Type: application/json
+
+{
+  "idOrigen": 1,
+  "idDestino": 2,
+  "monto": 1000.00
+}
