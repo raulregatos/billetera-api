@@ -1,0 +1,13 @@
+# Ignorar carpetas de compilación y binarios
+target/
+*.class
+*.jar
+*.war
+
+# Ignorar configuración del editor (IntelliJ)
+.idea/
+*.iml
+
+# Ignorar logs y archivos temporales
+*.log
+.mvn/

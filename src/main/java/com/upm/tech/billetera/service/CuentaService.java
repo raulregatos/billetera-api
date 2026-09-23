@@ -1,11 +1,15 @@
 package com.upm.tech.billetera.service;
 
 import com.upm.tech.billetera.model.Cuenta;
+import com.upm.tech.billetera.model.Transaccion;
+import com.upm.tech.billetera.model.TipoTransaccion;
 import com.upm.tech.billetera.repository.CuentaRepository;
+import com.upm.tech.billetera.repository.TransaccionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Service
 public class CuentaService {
@@ -13,9 +17,11 @@ public class CuentaService {
     // 1. Inyección de dependencias
     // Usamos el repositorio para hablar con la BD. Lo inyectamos por constructor (es la mejor práctica).
     private final CuentaRepository cuentaRepository;
+    private final TransaccionRepository transaccionRepository;
 
-    public CuentaService(CuentaRepository cuentaRepository) {
+    public CuentaService(CuentaRepository cuentaRepository, TransaccionRepository transaccionRepository) {
         this.cuentaRepository = cuentaRepository;
+        this.transaccionRepository = transaccionRepository;
     }
 
     // 2. Método de lectura simple (no modifica datos)
@@ -40,7 +46,11 @@ public class CuentaService {
         BigDecimal nuevoSaldo = cuenta.getSaldo().add(monto);
         cuenta.setSaldo(nuevoSaldo);
 
-        return cuentaRepository.save(cuenta);
+        Cuenta cuentaGuardada = cuentaRepository.save(cuenta);
+
+        registrarTransaccion(null, cuentaGuardada, monto, TipoTransaccion.DEPOSITO);
+
+        return cuentaGuardada;
     }
 
     // 4. TU RETO: Implementar el método retirar
@@ -62,7 +72,11 @@ public class CuentaService {
         cuenta.setSaldo(nuevoSaldo);
         // TODO 5: Guardar la cuenta y retornarla
 
-        return cuentaRepository.save(cuenta); // Cambia esto cuando lo implementes
+        Cuenta cuentaGuardada = cuentaRepository.save(cuenta);
+
+        registrarTransaccion(cuentaGuardada, null, monto, TipoTransaccion.RETIRO);
+
+        return cuentaGuardada;
     }
 
     @Transactional
@@ -101,7 +115,14 @@ public class CuentaService {
         BigDecimal nuevoSaldoDestino = cuentaDestino.getSaldo().add(monto);
         cuentaDestino.setSaldo(nuevoSaldoDestino);
         // TODO 4: Guardar ambas cuentas usando cuentaRepository.save(...) para ambas
-        cuentaRepository.save(cuentaOrigen);
-        cuentaRepository.save(cuentaDestino);
+        Cuenta cuentaOrigenGuardada = cuentaRepository.save(cuentaOrigen);
+        Cuenta cuentaDestinoGuardada = cuentaRepository.save(cuentaDestino);
+
+        registrarTransaccion(cuentaOrigenGuardada, cuentaDestinoGuardada, monto, TipoTransaccion.TRANSFERENCIA);
+    }
+
+    private void registrarTransaccion(Cuenta cuentaOrigen, Cuenta cuentaDestino, BigDecimal monto, TipoTransaccion tipo) {
+        Transaccion transaccion = new Transaccion(cuentaOrigen, cuentaDestino, monto, tipo, LocalDateTime.now());
+        transaccionRepository.save(transaccion);
     }
 }

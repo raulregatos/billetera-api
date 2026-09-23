@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Billetera Digital - Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800">
+
+<div class="max-w-5xl mx-auto px-4 py-10">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900">Billetera Digital</h1>
+            <p class="text-slate-500">Panel de control de tu cuenta</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <label for="cuentaIdInput" class="text-sm text-slate-500">Cuenta ID</label>
+            <input id="cuentaIdInput" type="number" value="1" min="1"
+                   class="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <button id="cargarCuentaBtn"
+                    class="text-sm bg-slate-900 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700 transition">
+                Cargar
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert banner -->
+    <div id="alertBox" class="hidden mb-6 rounded-xl px-4 py-3 text-sm font-medium shadow"></div>
+
+    <!-- Balance Card -->
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-8 mb-10 shadow-xl">
+        <div class="absolute -right-10 -top-10 w-56 h-56 bg-white/10 rounded-full"></div>
+        <div class="absolute -right-4 -bottom-16 w-40 h-40 bg-white/10 rounded-full"></div>
+
+        <div class="relative z-10 flex flex-col gap-6">
+            <div class="flex items-center justify-between">
+                <span class="text-indigo-200 font-medium tracking-wide">SALDO DISPONIBLE</span>
+                <span class="text-xs bg-white/20 rounded-full px-3 py-1">Cuenta #<span id="cuentaIdLabel">1</span></span>
+            </div>
+            <div>
+                <p id="saldoDisplay" class="text-5xl font-bold tracking-tight">$ --.--</p>
+                <p id="titularDisplay" class="text-indigo-200 mt-1">Cargando titular...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forms -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Depositar -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">↓</div>
+                <h2 class="text-lg font-semibold text-slate-900">Depositar</h2>
+            </div>
+            <form id="depositarForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-500 mb-1">Monto</label>
+                    <input type="number" step="0.01" min="0.01" required name="monto"
+                           class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                           placeholder="0.00">
+                </div>
+                <button type="submit"
+                        class="w-full bg-emerald-600 text-white font-medium py-2 rounded-lg hover:bg-emerald-700 transition">
+                    Depositar
+                </button>
+            </form>
+        </div>
+
+        <!-- Retirar -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 font-bold">↑</div>
+                <h2 class="text-lg font-semibold text-slate-900">Retirar</h2>
+            </div>
+            <form id="retirarForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-500 mb-1">Monto</label>
+                    <input type="number" step="0.01" min="0.01" required name="monto"
+                           class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                           placeholder="0.00">
+                </div>
+                <button type="submit"
+                        class="w-full bg-rose-600 text-white font-medium py-2 rounded-lg hover:bg-rose-700 transition">
+                    Retirar
+                </button>
+            </form>
+        </div>
+
+        <!-- Transferir -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">→</div>
+                <h2 class="text-lg font-semibold text-slate-900">Transferir</h2>
+            </div>
+            <form id="transferirForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-slate-500 mb-1">Cuenta destino</label>
+                    <input type="number" min="1" required name="idDestino"
+                           class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                           placeholder="ID de la cuenta">
+                </div>
+                <div>
+                    <label class="block text-sm text-slate-500 mb-1">Monto</label>
+                    <input type="number" step="0.01" min="0.01" required name="monto"
+                           class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                           placeholder="0.00">
+                </div>
+                <button type="submit"
+                        class="w-full bg-indigo-600 text-white font-medium py-2 rounded-lg hover:bg-indigo-700 transition">
+                    Transferir
+                </button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api/cuentas';
+    let cuentaActualId = 1;
+
+    const cuentaIdInput = document.getElementById('cuentaIdInput');
+    const cuentaIdLabel = document.getElementById('cuentaIdLabel');
+    const saldoDisplay = document.getElementById('saldoDisplay');
+    const titularDisplay = document.getElementById('titularDisplay');
+    const alertBox = document.getElementById('alertBox');
+
+    function formatearMonto(valor) {
+        const numero = Number(valor);
+        return numero.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function mostrarAlerta(mensaje, tipo) {
+        alertBox.textContent = mensaje;
+        alertBox.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-700', 'bg-rose-100', 'text-rose-700');
+        if (tipo === 'success') {
+            alertBox.classList.add('bg-emerald-100', 'text-emerald-700');
+        } else {
+            alertBox.classList.add('bg-rose-100', 'text-rose-700');
+        }
+        clearTimeout(alertBox._timeout);
+        alertBox._timeout = setTimeout(() => alertBox.classList.add('hidden'), 4000);
+    }
+
+    function actualizarTarjeta(cuenta) {
+        saldoDisplay.textContent = '$ ' + formatearMonto(cuenta.saldo);
+        titularDisplay.textContent = cuenta.titular ?? '';
+        cuentaIdLabel.textContent = cuenta.id;
+    }
+
+    async function manejarRespuesta(resp) {
+        const contentType = resp.headers.get('content-type') || '';
+        const esJson = contentType.includes('application/json');
+        if (!resp.ok) {
+            if (esJson) {
+                const cuerpo = await resp.json();
+                throw new Error(cuerpo.error || `Error ${resp.status}`);
+            }
+            const texto = await resp.text();
+            throw new Error(texto || `Error ${resp.status}`);
+        }
+        return esJson ? resp.json() : resp.text();
+    }
+
+    async function cargarCuenta(id) {
+        try {
+            const resp = await fetch(`${API_BASE}/${id}`);
+            const cuenta = await manejarRespuesta(resp);
+            cuentaActualId = cuenta.id;
+            actualizarTarjeta(cuenta);
+        } catch (err) {
+            titularDisplay.textContent = 'No se pudo cargar la cuenta';
+            saldoDisplay.textContent = '$ --.--';
+            mostrarAlerta(err.message || 'Error al cargar la cuenta', 'error');
+        }
+    }
+
+    document.getElementById('cargarCuentaBtn').addEventListener('click', () => {
+        const id = parseInt(cuentaIdInput.value, 10);
+        if (!id || id < 1) {
+            mostrarAlerta('Ingresá un ID de cuenta válido', 'error');
+            return;
+        }
+        cargarCuenta(id);
+    });
+
+    document.getElementById('depositarForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const monto = parseFloat(new FormData(e.target).get('monto'));
+        try {
+            const resp = await fetch(`${API_BASE}/depositar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idCuenta: cuentaActualId, monto })
+            });
+            const cuenta = await manejarRespuesta(resp);
+            actualizarTarjeta(cuenta);
+            mostrarAlerta('Depósito realizado con éxito', 'success');
+            e.target.reset();
+        } catch (err) {
+            mostrarAlerta(err.message || 'Error al depositar', 'error');
+        }
+    });
+
+    document.getElementById('retirarForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const monto = parseFloat(new FormData(e.target).get('monto'));
+        try {
+            const resp = await fetch(`${API_BASE}/retirar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idCuenta: cuentaActualId, monto })
+            });
+            const cuenta = await manejarRespuesta(resp);
+            actualizarTarjeta(cuenta);
+            mostrarAlerta('Retiro realizado con éxito', 'success');
+            e.target.reset();
+        } catch (err) {
+            mostrarAlerta(err.message || 'Error al retirar', 'error');
+        }
+    });
+
+    document.getElementById('transferirForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const idDestino = parseInt(formData.get('idDestino'), 10);
+        const monto = parseFloat(formData.get('monto'));
+        try {
+            const resp = await fetch(`${API_BASE}/transferir`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idOrigen: cuentaActualId, idDestino, monto })
+            });
+            await manejarRespuesta(resp);
+            mostrarAlerta('Transferencia realizada con éxito', 'success');
+            e.target.reset();
+            cargarCuenta(cuentaActualId);
+        } catch (err) {
+            mostrarAlerta(err.message || 'Error al transferir', 'error');
+        }
+    });
+
+    cargarCuenta(cuentaActualId);
+</script>
+</body>
+</html>

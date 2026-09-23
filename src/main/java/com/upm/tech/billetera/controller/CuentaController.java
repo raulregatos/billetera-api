@@ -1,5 +1,6 @@
 package com.upm.tech.billetera.controller;
 
+import com.upm.tech.billetera.dto.MontoRequest;
 import com.upm.tech.billetera.dto.TransferenciaRequest;
 import com.upm.tech.billetera.model.Cuenta;
 import com.upm.tech.billetera.service.CuentaService;
@@ -41,5 +42,21 @@ public class CuentaController {
 
         // TODO 4: Si todo va bien, devuelve ResponseEntity.ok("Transferencia realizada con éxito");
         return ResponseEntity.ok("Transferencia realizada con éxito");
+    }
+
+    // Endpoint 3: Depositar
+    // POST http://localhost:8080/api/cuentas/depositar
+    @PostMapping("/depositar")
+    public ResponseEntity<Cuenta> depositar(@Valid @RequestBody MontoRequest request) {
+        Cuenta cuenta = cuentaService.depositar(request.idCuenta(), request.monto());
+        return ResponseEntity.ok(cuenta);
+    }
+
+    // Endpoint 4: Retirar
+    // POST http://localhost:8080/api/cuentas/retirar
+    @PostMapping("/retirar")
+    public ResponseEntity<Cuenta> retirar(@Valid @RequestBody MontoRequest request) {
+        Cuenta cuenta = cuentaService.retirar(request.idCuenta(), request.monto());
+        return ResponseEntity.ok(cuenta);
     }
 }

@@ -1,0 +1,17 @@
+### Probar un depósito
+POST http://localhost:8080/api/cuentas/depositar
+Content-Type: application/json
+
+{
+  "idCuenta": 1,
+  "monto": 500.00
+}
+
+### Probar un retiro
+POST http://localhost:8080/api/cuentas/retirar
+Content-Type: application/json
+
+{
+  "idCuenta": 1,
+  "monto": 150.00
+}
