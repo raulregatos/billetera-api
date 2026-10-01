@@ -23,17 +23,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
     }
 
-    // TODO 1: Crea un método parecido al de arriba para manejar RuntimeException
-    // Pista: En nuestro Service lanzamos RuntimeException cuando la cuenta no se encuentra.
-    // En el mundo web, cuando algo no se encuentra, el código HTTP correcto es 404 (NOT_FOUND).
-    // Intenta crear el @ExceptionHandler(RuntimeException.class) que devuelva un HttpStatus.NOT_FOUND.
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> manejarCuentaNoEncontrada(RuntimeException ex) {
+    @ExceptionHandler(CuentaNoEncontradaException.class)
+    public ResponseEntity<Map<String, String>> manejarCuentaNoEncontrada(CuentaNoEncontradaException ex) {
         Map<String, String> respuesta = new HashMap<>();
         // Extraemos el mensaje del error que pusimos en el Service
         respuesta.put("error", ex.getMessage());
 
-        // Devolvemos un 404 NOT_FOUND
+        // Solo la ausencia de una cuenta se traduce a 404. Otros fallos inesperados
+        // conservan el tratamiento 500 de Spring.
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
     }
 }

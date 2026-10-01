@@ -22,9 +22,7 @@ public class CuentaController {
     // GET http://localhost:8080/api/cuentas/1
     @GetMapping("/{id}")
     public ResponseEntity<Cuenta> obtenerCuenta(@PathVariable Long id) {
-        // TODO 1: Llama a cuentaService.obtenerCuenta(id)
         Cuenta cuenta = cuentaService.obtenerCuenta(id);
-        // TODO 2: Retorna la cuenta dentro de un ResponseEntity.ok(...)
         return ResponseEntity.ok(cuenta);
     }
 
@@ -32,15 +30,7 @@ public class CuentaController {
     // POST http://localhost:8080/api/cuentas/transferir
     @PostMapping("/transferir")
     public ResponseEntity<String> transferir(@Valid @RequestBody TransferenciaRequest request) {
-        // Explicación mágica:
-        // @RequestBody coge el JSON que manda el cliente y lo convierte a tu objeto TransferenciaRequest.
-        // @Valid comprueba las reglas que pusimos (@NotNull, @Positive). Si fallan, Spring devuelve un 400 Bad Request automáticamente.
-
-        // TODO 3: Llama al método transferir de cuentaService pasando los datos del 'request'
-        // Pista: usa request.idOrigen(), request.idDestino(), request.monto()
         cuentaService.transferir(request.idOrigen(), request.idDestino(), request.monto());
-
-        // TODO 4: Si todo va bien, devuelve ResponseEntity.ok("Transferencia realizada con éxito");
         return ResponseEntity.ok("Transferencia realizada con éxito");
     }
 

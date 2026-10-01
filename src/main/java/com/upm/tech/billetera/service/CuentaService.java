@@ -3,6 +3,7 @@ package com.upm.tech.billetera.service;
 import com.upm.tech.billetera.model.Cuenta;
 import com.upm.tech.billetera.model.Transaccion;
 import com.upm.tech.billetera.model.TipoTransaccion;
+import com.upm.tech.billetera.exception.CuentaNoEncontradaException;
 import com.upm.tech.billetera.repository.CuentaRepository;
 import com.upm.tech.billetera.repository.TransaccionRepository;
 import org.springframework.stereotype.Service;
@@ -26,9 +27,9 @@ public class CuentaService {
 
     // 2. Método de lectura simple (no modifica datos)
     public Cuenta obtenerCuenta(Long id) {
-        // findById devuelve un Optional, si no existe lanzamos un error genérico por ahora
+        // findById devuelve un Optional; el error específico se transforma en HTTP 404.
         return cuentaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
+                .orElseThrow(() -> new CuentaNoEncontradaException(id));
     }
 
     // 3. Método transaccional: Depositar
@@ -40,7 +41,8 @@ public class CuentaService {
             throw new IllegalArgumentException("El monto a depositar debe ser mayor a cero");
         }
 
-        Cuenta cuenta = obtenerCuenta(id);
+        Cuenta cuenta = cuentaRepository.findByIdConBloqueo(id)
+                .orElseThrow(() -> new CuentaNoEncontradaException(id));
 
         // Sumar al saldo: cuenta.getSaldo() + monto
         BigDecimal nuevoSaldo = cuenta.getSaldo().add(monto);
@@ -53,24 +55,19 @@ public class CuentaService {
         return cuentaGuardada;
     }
 
-    // 4. TU RETO: Implementar el método retirar
     @Transactional
     public Cuenta retirar(Long id, BigDecimal monto) {
-        // TODO 1: Validar que el monto sea mayor a cero
         if (monto.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("El monto a retirar debe ser mayor a cero");
         }
-        // TODO 2: Obtener la cuenta
-        Cuenta cuenta = obtenerCuenta(id);
+        Cuenta cuenta = cuentaRepository.findByIdConBloqueo(id)
+                .orElseThrow(() -> new CuentaNoEncontradaException(id));
 
-        // TODO 3: Validar que la cuenta tenga saldo suficiente (saldo >= monto)
-        if(cuenta.getSaldo().compareTo(monto)<0){
+        if (cuenta.getSaldo().compareTo(monto) < 0) {
             throw new IllegalArgumentException("El saldo disponible debe ser mayor o igual al monto a retirar");
         }
-        // TODO 4: Restar el monto usando el método .subtract() de BigDecimal
         BigDecimal nuevoSaldo = cuenta.getSaldo().subtract(monto);
         cuenta.setSaldo(nuevoSaldo);
-        // TODO 5: Guardar la cuenta y retornarla
 
         Cuenta cuentaGuardada = cuentaRepository.save(cuenta);
 
@@ -95,26 +92,22 @@ public class CuentaService {
 
         // 2. Extraemos las cuentas CON BLOQUEO (usando el nuevo método del repositorio)
         Cuenta primeraCuenta = cuentaRepository.findByIdConBloqueo(primerId)
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
+                .orElseThrow(() -> new CuentaNoEncontradaException(primerId));
 
         Cuenta segundaCuenta = cuentaRepository.findByIdConBloqueo(segundoId)
-                .orElseThrow(() -> new RuntimeException("Cuenta no encontrada"));
+                .orElseThrow(() -> new CuentaNoEncontradaException(segundoId));
 
         // 3. Volvemos a identificar quién era el origen y quién el destino
         Cuenta cuentaOrigen = primeraCuenta.getId().equals(idOrigen) ? primeraCuenta : segundaCuenta;
         Cuenta cuentaDestino = primeraCuenta.getId().equals(idDestino) ? primeraCuenta : segundaCuenta;
 
-        // TODO 1: Validar que la cuentaOrigen tenga saldo suficiente (saldo >= monto)
-        if(cuentaOrigen.getSaldo().compareTo(monto)<0){
+        if (cuentaOrigen.getSaldo().compareTo(monto) < 0) {
             throw new IllegalArgumentException("El saldo disponible debe ser mayor o igual al monto a retirar");
         }
-        // TODO 2: Restar el monto a cuentaOrigen
         BigDecimal nuevoSaldoOrigen = cuentaOrigen.getSaldo().subtract(monto);
         cuentaOrigen.setSaldo(nuevoSaldoOrigen);
-        // TODO 3: Sumar el monto a cuentaDestino
         BigDecimal nuevoSaldoDestino = cuentaDestino.getSaldo().add(monto);
         cuentaDestino.setSaldo(nuevoSaldoDestino);
-        // TODO 4: Guardar ambas cuentas usando cuentaRepository.save(...) para ambas
         Cuenta cuentaOrigenGuardada = cuentaRepository.save(cuentaOrigen);
         Cuenta cuentaDestinoGuardada = cuentaRepository.save(cuentaDestino);
 

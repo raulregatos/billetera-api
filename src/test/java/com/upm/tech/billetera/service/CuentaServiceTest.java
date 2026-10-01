@@ -1,6 +1,9 @@
 package com.upm.tech.billetera.service;
 
 import com.upm.tech.billetera.model.Cuenta;
+import com.upm.tech.billetera.model.Transaccion;
+import com.upm.tech.billetera.model.TipoTransaccion;
+import com.upm.tech.billetera.exception.CuentaNoEncontradaException;
 import com.upm.tech.billetera.repository.CuentaRepository;
 import com.upm.tech.billetera.repository.TransaccionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +60,77 @@ class CuentaServiceTest {
 
         verify(cuentaRepository).save(cuentaOrigen);
         verify(cuentaRepository).save(cuentaDestino);
+        verify(transaccionRepository).save(argThat(transaccion ->
+                transaccion.getTipo() == TipoTransaccion.TRANSFERENCIA
+                        && transaccion.getCuentaOrigen() == cuentaOrigen
+                        && transaccion.getCuentaDestino() == cuentaDestino));
+    }
+
+    @Test
+    void transferenciaEnSentidoInversoBloqueaPorIdAscendente() {
+        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.findByIdConBloqueo(2L)).thenReturn(Optional.of(cuentaDestino));
+        when(cuentaRepository.save(any(Cuenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        cuentaService.transferir(2L, 1L, new BigDecimal("10.00"));
+
+        var inOrder = inOrder(cuentaRepository);
+        inOrder.verify(cuentaRepository).findByIdConBloqueo(1L);
+        inOrder.verify(cuentaRepository).findByIdConBloqueo(2L);
+    }
+
+    @Test
+    void depositarBloqueaCuentaYRegistraMovimiento() {
+        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.save(any(Cuenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Cuenta resultado = cuentaService.depositar(1L, new BigDecimal("25.00"));
+
+        assertThat(resultado.getSaldo()).isEqualByComparingTo("125.00");
+        verify(cuentaRepository).findByIdConBloqueo(1L);
+        verify(cuentaRepository, never()).findById(1L);
+        verify(transaccionRepository).save(argThat(transaccion ->
+                transaccion.getTipo() == TipoTransaccion.DEPOSITO
+                        && transaccion.getCuentaOrigen() == null
+                        && transaccion.getCuentaDestino() == cuentaOrigen));
+    }
+
+    @Test
+    void retirarBloqueaCuentaYRegistraMovimiento() {
+        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.save(any(Cuenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Cuenta resultado = cuentaService.retirar(1L, new BigDecimal("25.00"));
+
+        assertThat(resultado.getSaldo()).isEqualByComparingTo("75.00");
+        verify(cuentaRepository).findByIdConBloqueo(1L);
+        verify(cuentaRepository, never()).findById(1L);
+        verify(transaccionRepository).save(argThat(transaccion ->
+                transaccion.getTipo() == TipoTransaccion.RETIRO
+                        && transaccion.getCuentaOrigen() == cuentaOrigen
+                        && transaccion.getCuentaDestino() == null));
+    }
+
+    @Test
+    void retirarSaldoInsuficienteNoGuardaCambios() {
+        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> cuentaService.retirar(1L, new BigDecimal("500.00")));
+
+        verify(cuentaRepository, never()).save(any(Cuenta.class));
+        verify(transaccionRepository, never()).save(any(Transaccion.class));
+    }
+
+    @Test
+    void depositarCuentaNoEncontradaUsaExcepcionEspecifica() {
+        when(cuentaRepository.findByIdConBloqueo(99L)).thenReturn(Optional.empty());
+
+        assertThrows(CuentaNoEncontradaException.class,
+                () -> cuentaService.depositar(99L, new BigDecimal("1.00")));
+
+        verify(cuentaRepository, never()).save(any(Cuenta.class));
+        verify(transaccionRepository, never()).save(any(Transaccion.class));
     }
 
     @Test
@@ -79,7 +153,7 @@ class CuentaServiceTest {
         when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
         when(cuentaRepository.findByIdConBloqueo(2L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class,
+        assertThrows(CuentaNoEncontradaException.class,
                 () -> cuentaService.transferir(1L, 2L, monto));
 
         verify(cuentaRepository, never()).save(any(Cuenta.class));

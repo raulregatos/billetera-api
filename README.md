@@ -1,30 +1,72 @@
 # Billetera API
-Backend Transaccional y Control de Concurrencia
 
-Sistema backend diseñado para la gestión de operaciones financieras y control de saldo en una billetera virtual. La arquitectura del proyecto está enfocada en garantizar la integridad de los datos frente a transacciones concurrentes, evitando condiciones de carrera y bloqueos mutuos (deadlocks).
+API REST de ejemplo para consultar cuentas, depositar, retirar y transferir saldo. Usa Java 21, Spring Boot, Spring Data JPA y PostgreSQL.
 
----
+## Requisitos
 
-### Stack Técnico
+- JDK 21
+- Docker con Docker Compose
 
-*   **Núcleo:** Java 21, Spring Boot
-*   **Persistencia:** PostgreSQL, SQL
-*   **Infraestructura:** Docker
-*   **Documentación:** OpenAPI (Swagger)
+## Arranque local
 
----
+1. Inicia PostgreSQL desde la raíz del proyecto:
 
-### Arquitectura y Concurrencia
+   ```bash
+   docker compose up -d
+   ```
 
-El principal reto técnico resuelto en este proyecto es la gestión de la concurrencia. Para asegurar que las operaciones de retiro, depósito y transferencia mantengan la consistencia matemática del saldo bajo peticiones simultáneas, se ha implementado un control de concurrencia mediante **Bloqueo Pesimista (Pessimistic Locking)** a nivel de fila en la base de datos relacional.
+2. Inicia la aplicación:
 
----
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
-### Ejecución y Despliegue (Entorno Local)
+   En Windows también puedes usar `mvnw.cmd spring-boot:run`.
 
-El proyecto está contenerizado para facilitar su levantamiento sin necesidad de instalar bases de datos locales.
+   En el primer arranque, si no hay cuentas, se crean Alice (ID 1, saldo 500.00) y Bob (ID 2, saldo 200.00).
 
-**1. Levantar la infraestructura de datos**  
-Inicia el contenedor de PostgreSQL ejecutando el siguiente comando en la raíz del proyecto:
+3. Abre la interfaz en [http://localhost:8080/](http://localhost:8080/) o Swagger UI en [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html).
+
+Para detener PostgreSQL conserva los datos con `docker compose down`. Para borrar también los datos persistidos, ejecuta `docker compose down -v`.
+
+## API
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| `GET` | `/api/cuentas/{id}` | Consulta una cuenta |
+| `POST` | `/api/cuentas/depositar` | Deposita en la cuenta indicada |
+| `POST` | `/api/cuentas/retirar` | Retira de la cuenta indicada si tiene saldo suficiente |
+| `POST` | `/api/cuentas/transferir` | Transfiere saldo entre dos cuentas distintas |
+
+Ejemplo de depósito:
+
+```http
+POST /api/cuentas/depositar
+Content-Type: application/json
+
+{"idCuenta": 1, "monto": 25.00}
+```
+
+Los importes deben ser mayores que cero. Los errores de negocio se responden con HTTP 400 y una cuenta inexistente con HTTP 404.
+
+## Concurrencia e integridad
+
+Los depósitos, retiros y transferencias bloquean las filas afectadas con `PESSIMISTIC_WRITE` dentro de una transacción. Las transferencias adquieren los bloqueos por ID ascendente para reducir deadlocks. El cambio de saldo y el registro de su movimiento se confirman o revierten juntos.
+
+## Configuración
+
+La conexión local usa estos valores predeterminados, que coinciden con `compose.yaml`:
+
+| Variable | Predeterminado |
+| --- | --- |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/billetera` |
+| `DB_USERNAME` | `admin` |
+| `DB_PASSWORD` | `root` |
+
+Sobrescribe estas variables para otros entornos. Los valores predeterminados son solo para desarrollo local. Hibernate mantiene `ddl-auto=update` para facilitar la ejecución local; en producción se recomienda gestionar el esquema con migraciones y desactivar la actualización automática.
+
+## Pruebas
+
 ```bash
-docker compose up -d
+./mvnw test
+```

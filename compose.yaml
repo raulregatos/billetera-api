@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: billetera-postgres
+    environment:
+      POSTGRES_DB: billetera
+      POSTGRES_USER: ${DB_USERNAME:-admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - billetera-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-admin} -d billetera"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  billetera-postgres-data:
