@@ -98,6 +98,20 @@ Sobrescribe estas variables para otros entornos. Los valores predeterminados de 
 
 ## Pruebas
 
+La suite habitual ejecuta las pruebas unitarias y de integración existentes. Requiere una base PostgreSQL configurada con `DB_URL`, `DB_USERNAME` y `DB_PASSWORD` (por defecto, la base local de desarrollo):
+
 ```bash
 ./mvnw test
 ```
+
+Las pruebas de extremo a extremo se ejecutan aparte en el perfil `e2e`. Requieren Docker, porque el test de navegador inicia su propio PostgreSQL temporal con Testcontainers; esa base se elimina al finalizar y no utiliza los datos locales. Playwright necesita descargar Chromium una vez:
+
+```bash
+./mvnw -Pe2e exec:java \
+  -Dexec.mainClass=com.microsoft.playwright.CLI \
+  "-Dexec.args=install chromium" \
+  -Dexec.classpathScope=test
+./mvnw verify -Pe2e
+```
+
+En Windows, sustituye `./mvnw` por `mvnw.cmd`. El perfil `e2e` incluye tanto la suite normal (que usa la base definida por `DB_URL`) como las pruebas del navegador (que usan un contenedor independiente). Las capturas de pantalla de pruebas de navegador fallidas se guardan en `target/e2e-artifacts/`.
