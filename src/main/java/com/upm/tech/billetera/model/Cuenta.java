@@ -13,12 +13,22 @@ public class Cuenta {
     private String titular;
     private BigDecimal saldo;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
     public Cuenta(){
 
     }
     public Cuenta(String titular, BigDecimal saldo) {
         this.titular = titular;
         this.saldo = saldo;
+    }
+
+    public Cuenta(String titular, BigDecimal saldo, Usuario usuario) {
+        this.titular = titular;
+        this.saldo = saldo;
+        this.usuario = usuario;
     }
 
     public Long getId() {
@@ -42,5 +52,13 @@ public class Cuenta {
 
     public void setSaldo(BigDecimal saldo) {
         this.saldo = saldo;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 }

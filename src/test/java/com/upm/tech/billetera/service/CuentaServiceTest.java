@@ -6,6 +6,7 @@ import com.upm.tech.billetera.model.TipoTransaccion;
 import com.upm.tech.billetera.exception.CuentaNoEncontradaException;
 import com.upm.tech.billetera.repository.CuentaRepository;
 import com.upm.tech.billetera.repository.TransaccionRepository;
+import com.upm.tech.billetera.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +31,9 @@ class CuentaServiceTest {
     @Mock
     private TransaccionRepository transaccionRepository;
 
+    @Mock
+    private UsuarioRepository usuarioRepository;
+
     @InjectMocks
     private CuentaService cuentaService;
 
@@ -49,11 +53,13 @@ class CuentaServiceTest {
     void transferirExitoso() {
         BigDecimal monto = new BigDecimal("30.00");
 
+        when(cuentaRepository.findByIdAndUsuarioNombreUsuario(1L, "alice")).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.findById(2L)).thenReturn(Optional.of(cuentaDestino));
         when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
         when(cuentaRepository.findByIdConBloqueo(2L)).thenReturn(Optional.of(cuentaDestino));
         when(cuentaRepository.save(any(Cuenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        cuentaService.transferir(1L, 2L, monto);
+        cuentaService.transferir(1L, 2L, monto, "alice");
 
         assertThat(cuentaOrigen.getSaldo()).isEqualTo(new BigDecimal("70.00"));
         assertThat(cuentaDestino.getSaldo()).isEqualTo(new BigDecimal("80.00"));
@@ -68,11 +74,13 @@ class CuentaServiceTest {
 
     @Test
     void transferenciaEnSentidoInversoBloqueaPorIdAscendente() {
+        when(cuentaRepository.findByIdAndUsuarioNombreUsuario(2L, "alice")).thenReturn(Optional.of(cuentaDestino));
+        when(cuentaRepository.findById(1L)).thenReturn(Optional.of(cuentaOrigen));
         when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
         when(cuentaRepository.findByIdConBloqueo(2L)).thenReturn(Optional.of(cuentaDestino));
         when(cuentaRepository.save(any(Cuenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        cuentaService.transferir(2L, 1L, new BigDecimal("10.00"));
+        cuentaService.transferir(2L, 1L, new BigDecimal("10.00"), "alice");
 
         var inOrder = inOrder(cuentaRepository);
         inOrder.verify(cuentaRepository).findByIdConBloqueo(1L);
@@ -81,13 +89,13 @@ class CuentaServiceTest {
 
     @Test
     void depositarBloqueaCuentaYRegistraMovimiento() {
-        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.findByIdAndUsuarioConBloqueo(1L, "alice")).thenReturn(Optional.of(cuentaOrigen));
         when(cuentaRepository.save(any(Cuenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Cuenta resultado = cuentaService.depositar(1L, new BigDecimal("25.00"));
+        var resultado = cuentaService.depositar(1L, new BigDecimal("25.00"), "alice");
 
-        assertThat(resultado.getSaldo()).isEqualByComparingTo("125.00");
-        verify(cuentaRepository).findByIdConBloqueo(1L);
+        assertThat(resultado.saldo()).isEqualByComparingTo("125.00");
+        verify(cuentaRepository).findByIdAndUsuarioConBloqueo(1L, "alice");
         verify(cuentaRepository, never()).findById(1L);
         verify(transaccionRepository).save(argThat(transaccion ->
                 transaccion.getTipo() == TipoTransaccion.DEPOSITO
@@ -97,13 +105,13 @@ class CuentaServiceTest {
 
     @Test
     void retirarBloqueaCuentaYRegistraMovimiento() {
-        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.findByIdAndUsuarioConBloqueo(1L, "alice")).thenReturn(Optional.of(cuentaOrigen));
         when(cuentaRepository.save(any(Cuenta.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Cuenta resultado = cuentaService.retirar(1L, new BigDecimal("25.00"));
+        var resultado = cuentaService.retirar(1L, new BigDecimal("25.00"), "alice");
 
-        assertThat(resultado.getSaldo()).isEqualByComparingTo("75.00");
-        verify(cuentaRepository).findByIdConBloqueo(1L);
+        assertThat(resultado.saldo()).isEqualByComparingTo("75.00");
+        verify(cuentaRepository).findByIdAndUsuarioConBloqueo(1L, "alice");
         verify(cuentaRepository, never()).findById(1L);
         verify(transaccionRepository).save(argThat(transaccion ->
                 transaccion.getTipo() == TipoTransaccion.RETIRO
@@ -113,10 +121,10 @@ class CuentaServiceTest {
 
     @Test
     void retirarSaldoInsuficienteNoGuardaCambios() {
-        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.findByIdAndUsuarioConBloqueo(1L, "alice")).thenReturn(Optional.of(cuentaOrigen));
 
         assertThrows(IllegalArgumentException.class,
-                () -> cuentaService.retirar(1L, new BigDecimal("500.00")));
+                () -> cuentaService.retirar(1L, new BigDecimal("500.00"), "alice"));
 
         verify(cuentaRepository, never()).save(any(Cuenta.class));
         verify(transaccionRepository, never()).save(any(Transaccion.class));
@@ -124,10 +132,10 @@ class CuentaServiceTest {
 
     @Test
     void depositarCuentaNoEncontradaUsaExcepcionEspecifica() {
-        when(cuentaRepository.findByIdConBloqueo(99L)).thenReturn(Optional.empty());
+        when(cuentaRepository.findByIdAndUsuarioConBloqueo(99L, "alice")).thenReturn(Optional.empty());
 
         assertThrows(CuentaNoEncontradaException.class,
-                () -> cuentaService.depositar(99L, new BigDecimal("1.00")));
+                () -> cuentaService.depositar(99L, new BigDecimal("1.00"), "alice"));
 
         verify(cuentaRepository, never()).save(any(Cuenta.class));
         verify(transaccionRepository, never()).save(any(Transaccion.class));
@@ -137,11 +145,13 @@ class CuentaServiceTest {
     void transferirSaldoInsuficiente() {
         BigDecimal monto = new BigDecimal("500.00");
 
+        when(cuentaRepository.findByIdAndUsuarioNombreUsuario(1L, "alice")).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.findById(2L)).thenReturn(Optional.of(cuentaDestino));
         when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
         when(cuentaRepository.findByIdConBloqueo(2L)).thenReturn(Optional.of(cuentaDestino));
 
         assertThrows(IllegalArgumentException.class,
-                () -> cuentaService.transferir(1L, 2L, monto));
+                () -> cuentaService.transferir(1L, 2L, monto, "alice"));
 
         verify(cuentaRepository, never()).save(any(Cuenta.class));
     }
@@ -150,11 +160,11 @@ class CuentaServiceTest {
     void transferirCuentaNoEncontrada() {
         BigDecimal monto = new BigDecimal("10.00");
 
-        when(cuentaRepository.findByIdConBloqueo(1L)).thenReturn(Optional.of(cuentaOrigen));
-        when(cuentaRepository.findByIdConBloqueo(2L)).thenReturn(Optional.empty());
+        when(cuentaRepository.findByIdAndUsuarioNombreUsuario(1L, "alice")).thenReturn(Optional.of(cuentaOrigen));
+        when(cuentaRepository.findById(2L)).thenReturn(Optional.empty());
 
         assertThrows(CuentaNoEncontradaException.class,
-                () -> cuentaService.transferir(1L, 2L, monto));
+                () -> cuentaService.transferir(1L, 2L, monto, "alice"));
 
         verify(cuentaRepository, never()).save(any(Cuenta.class));
     }

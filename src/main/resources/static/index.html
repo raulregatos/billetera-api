@@ -16,19 +16,71 @@
             <h1 class="text-3xl font-bold text-slate-900">Billetera Digital</h1>
             <p class="text-slate-500">Panel de control de tu cuenta</p>
         </div>
-        <div class="flex items-center gap-2">
-            <label for="cuentaIdInput" class="text-sm text-slate-500">Cuenta ID</label>
-            <input id="cuentaIdInput" type="number" value="1" min="1"
-                   class="w-20 rounded-lg border border-slate-300 px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <button id="cargarCuentaBtn"
+        <div id="userControls" class="hidden items-center gap-3">
+            <span id="usuarioActual" class="text-sm text-slate-600"></span>
+            <button id="logoutBtn" type="button"
                     class="text-sm bg-slate-900 text-white px-3 py-1.5 rounded-lg hover:bg-slate-700 transition">
-                Cargar
+                Cerrar sesión
             </button>
         </div>
     </div>
 
     <!-- Alert banner -->
     <div id="alertBox" class="hidden mb-6 rounded-xl px-4 py-3 text-sm font-medium shadow"></div>
+
+    <section id="authPanel" class="grid grid-cols-1 gap-6 md:grid-cols-2" aria-label="Acceso a la billetera">
+        <form id="loginForm" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-900">Iniciar sesión</h2>
+                <p class="mt-1 text-sm text-slate-500">Accede a tus cuentas y movimientos.</p>
+            </div>
+            <label class="block text-sm text-slate-600">Usuario
+                <input name="usuario" autocomplete="username" required minlength="3" maxlength="32"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm text-slate-600">Contraseña
+                <input name="contrasena" type="password" autocomplete="current-password" required
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            </label>
+            <button class="w-full rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700">Entrar</button>
+        </form>
+
+        <form id="registerForm" class="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div>
+                <h2 class="text-xl font-semibold text-slate-900">Crear usuario</h2>
+                <p class="mt-1 text-sm text-slate-500">Se abrirá una cuenta nueva con saldo cero.</p>
+            </div>
+            <label class="block text-sm text-slate-600">Titular de la cuenta
+                <input name="titular" autocomplete="name" required maxlength="100"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm text-slate-600">Usuario
+                <input name="usuario" autocomplete="username" required minlength="3" maxlength="32" pattern="[a-zA-Z0-9._-]+"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            </label>
+            <label class="block text-sm text-slate-600">Contraseña (12 caracteres mínimo)
+                <input name="contrasena" type="password" autocomplete="new-password" required minlength="12" maxlength="72"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" />
+            </label>
+            <button class="w-full rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white hover:bg-emerald-700">Registrarme</button>
+        </form>
+    </section>
+
+    <main id="dashboard" class="hidden">
+    <section class="mb-6 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between">
+        <div class="flex flex-1 flex-col gap-2 sm:flex-row sm:items-end">
+            <label for="cuentaSelector" class="text-sm text-slate-600">Mis cuentas
+                <select id="cuentaSelector" class="mt-1 w-full min-w-56 rounded-lg border border-slate-300 px-3 py-2 sm:mt-0"></select>
+            </label>
+        </div>
+        <form id="crearCuentaForm" class="flex flex-col gap-2 sm:flex-row sm:items-end">
+            <label class="text-sm text-slate-600">Añadir cuenta
+                <input name="titular" required maxlength="100" placeholder="Titular de la cuenta"
+                       class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 sm:mt-0" />
+            </label>
+            <button class="rounded-lg border border-indigo-300 px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50">Crear cuenta</button>
+        </form>
+    </section>
 
     <!-- Balance Card -->
     <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-8 mb-10 shadow-xl">
@@ -54,7 +106,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">↓</div>
-                <h2 class="text-lg font-semibold text-slate-900">Depositar</h2>
+                <h2 class="text-lg font-semibold text-slate-900">Depositar (simulado)</h2>
             </div>
             <form id="depositarForm" class="space-y-4">
                 <div>
@@ -117,134 +169,381 @@
         </div>
 
     </div>
+
+    <!-- Historial de movimientos -->
+    <section class="mt-10 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" aria-labelledby="historialTitulo">
+        <div class="mb-5 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 id="historialTitulo" class="text-xl font-semibold text-slate-900">Historial de movimientos</h2>
+                <p class="text-sm text-slate-500">Movimientos de la cuenta seleccionada</p>
+            </div>
+        </div>
+
+        <div class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+                <label for="historialTipo" class="mb-1 block text-sm text-slate-500">Tipo</label>
+                <select id="historialTipo" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">Todos</option>
+                    <option value="DEPOSITO">Depósito</option>
+                    <option value="RETIRO">Retiro</option>
+                    <option value="TRANSFERENCIA">Transferencia</option>
+                </select>
+            </div>
+            <div>
+                <label for="historialDesde" class="mb-1 block text-sm text-slate-500">Desde</label>
+                <input id="historialDesde" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="historialHasta" class="mb-1 block text-sm text-slate-500">Hasta</label>
+                <input id="historialHasta" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex items-end gap-2">
+                <button id="aplicarFiltrosBtn" type="button" class="flex-1 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">Filtrar</button>
+                <button id="limpiarFiltrosBtn" type="button" class="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50">Limpiar</button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th scope="col" class="px-3 py-3">Fecha</th>
+                        <th scope="col" class="px-3 py-3">Tipo</th>
+                        <th scope="col" class="px-3 py-3">Dirección</th>
+                        <th scope="col" class="px-3 py-3 text-right">Importe</th>
+                        <th scope="col" class="px-3 py-3">Cuenta relacionada</th>
+                    </tr>
+                </thead>
+                <tbody id="historialBody" class="divide-y divide-slate-100">
+                    <tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">Cargando movimientos...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p id="historialResumen" class="text-sm text-slate-500" aria-live="polite">Cargando movimientos...</p>
+            <div class="flex items-center justify-end gap-2">
+                <button id="historialAnteriorBtn" type="button" disabled class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Anterior</button>
+                <button id="historialSiguienteBtn" type="button" disabled class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button>
+            </div>
+        </div>
+    </section>
+    </main>
 </div>
 
 <script>
     const API_BASE = '/api/cuentas';
-    let cuentaActualId = 1;
-
-    const cuentaIdInput = document.getElementById('cuentaIdInput');
+    let cuentaActualId = null;
+    let csrfToken = null;
+    let paginaHistorial = 0;
+    let cuentasActuales = [];
+    let solicitudCuenta = 0;
+    const TAMANO_PAGINA_HISTORIAL = 20;
     const cuentaIdLabel = document.getElementById('cuentaIdLabel');
     const saldoDisplay = document.getElementById('saldoDisplay');
     const titularDisplay = document.getElementById('titularDisplay');
     const alertBox = document.getElementById('alertBox');
+    const historialBody = document.getElementById('historialBody');
+    const historialResumen = document.getElementById('historialResumen');
 
     function formatearMonto(valor) {
-        const numero = Number(valor);
-        return numero.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return Number(valor).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
-    function mostrarAlerta(mensaje, tipo) {
+    function mostrarAlerta(mensaje, tipo = 'error') {
         alertBox.textContent = mensaje;
         alertBox.classList.remove('hidden', 'bg-emerald-100', 'text-emerald-700', 'bg-rose-100', 'text-rose-700');
-        if (tipo === 'success') {
-            alertBox.classList.add('bg-emerald-100', 'text-emerald-700');
-        } else {
-            alertBox.classList.add('bg-rose-100', 'text-rose-700');
-        }
+        alertBox.classList.add(tipo === 'success' ? 'bg-emerald-100' : 'bg-rose-100',
+            tipo === 'success' ? 'text-emerald-700' : 'text-rose-700');
         clearTimeout(alertBox._timeout);
         alertBox._timeout = setTimeout(() => alertBox.classList.add('hidden'), 4000);
     }
 
-    function actualizarTarjeta(cuenta) {
-        saldoDisplay.textContent = '$ ' + formatearMonto(cuenta.saldo);
-        titularDisplay.textContent = cuenta.titular ?? '';
-        cuentaIdLabel.textContent = cuenta.id;
+    function escaparHtml(valor) {
+        return String(valor ?? '').replace(/[&<>"']/g, caracter => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[caracter]);
     }
 
     async function manejarRespuesta(resp) {
         const contentType = resp.headers.get('content-type') || '';
         const esJson = contentType.includes('application/json');
+        const cuerpo = esJson ? await resp.json() : await resp.text();
         if (!resp.ok) {
-            if (esJson) {
-                const cuerpo = await resp.json();
-                throw new Error(cuerpo.error || `Error ${resp.status}`);
-            }
-            const texto = await resp.text();
-            throw new Error(texto || `Error ${resp.status}`);
+            const error = new Error(esJson ? (cuerpo.error || `Error ${resp.status}`) : (cuerpo || `Error ${resp.status}`));
+            error.status = resp.status;
+            throw error;
         }
-        return esJson ? resp.json() : resp.text();
+        return cuerpo;
+    }
+
+    async function cargarTokenCsrf() {
+        const respuesta = await fetch('/api/auth/csrf', { credentials: 'same-origin' });
+        const resultado = await manejarRespuesta(respuesta);
+        csrfToken = resultado.token;
+    }
+
+    async function apiFetch(url, options = {}) {
+        const method = (options.method || 'GET').toUpperCase();
+        const headers = new Headers(options.headers || {});
+        if (!['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes(method)) {
+            if (!csrfToken) await cargarTokenCsrf();
+            headers.set('X-CSRF-TOKEN', csrfToken);
+        }
+        return fetch(url, { ...options, method, headers, credentials: 'same-origin' });
+    }
+
+    function actualizarTarjeta(cuenta) {
+        saldoDisplay.textContent = '$ ' + formatearMonto(cuenta.saldo);
+        titularDisplay.textContent = cuenta.titular;
+        cuentaIdLabel.textContent = cuenta.id;
+    }
+
+    function mostrarAutenticacion() {
+        document.getElementById('authPanel').classList.remove('hidden');
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('userControls').classList.add('hidden');
+        document.getElementById('userControls').classList.remove('flex');
+        cuentaActualId = null;
+        cuentasActuales = [];
+    }
+
+    async function cargarCuentas(idPreferido = cuentaActualId) {
+        const cuentas = await manejarRespuesta(await apiFetch(API_BASE));
+        cuentasActuales = cuentas;
+        const selector = document.getElementById('cuentaSelector');
+        selector.replaceChildren();
+        for (const cuenta of cuentas) {
+            const opcion = document.createElement('option');
+            opcion.value = String(cuenta.id);
+            opcion.textContent = `${cuenta.titular} (#${cuenta.id})`;
+            selector.append(opcion);
+        }
+        if (cuentas.length === 0) {
+            cuentaActualId = null;
+            mostrarAlerta('No tienes cuentas. Crea una para comenzar.');
+            return;
+        }
+        const seleccionada = cuentas.some(cuenta => cuenta.id === idPreferido) ? idPreferido : cuentas[0].id;
+        selector.value = String(seleccionada);
+        await cargarCuenta(seleccionada);
     }
 
     async function cargarCuenta(id) {
+        const solicitud = ++solicitudCuenta;
+        cuentaActualId = Number(id);
         try {
-            const resp = await fetch(`${API_BASE}/${id}`);
-            const cuenta = await manejarRespuesta(resp);
-            cuentaActualId = cuenta.id;
+            const cuenta = await manejarRespuesta(await apiFetch(`${API_BASE}/${cuentaActualId}`));
+            if (solicitud !== solicitudCuenta) return;
             actualizarTarjeta(cuenta);
+            await cargarHistorial(0);
         } catch (err) {
-            titularDisplay.textContent = 'No se pudo cargar la cuenta';
-            saldoDisplay.textContent = '$ --.--';
-            mostrarAlerta(err.message || 'Error al cargar la cuenta', 'error');
+            if (err.status === 401) {
+                mostrarAutenticacion();
+                return;
+            }
+            if (solicitud === solicitudCuenta) mostrarAlerta(err.message || 'Error al cargar la cuenta');
         }
     }
 
-    document.getElementById('cargarCuentaBtn').addEventListener('click', () => {
-        const id = parseInt(cuentaIdInput.value, 10);
-        if (!id || id < 1) {
-            mostrarAlerta('Ingresá un ID de cuenta válido', 'error');
+    function actualizarControlesHistorial(pagina) {
+        paginaHistorial = pagina.page;
+        historialResumen.textContent = pagina.totalElements === 0
+            ? 'No hay movimientos para estos filtros.'
+            : `Página ${pagina.page + 1} de ${pagina.totalPages} · ${pagina.totalElements} movimientos`;
+        document.getElementById('historialAnteriorBtn').disabled = !pagina.hasPrevious;
+        document.getElementById('historialSiguienteBtn').disabled = !pagina.hasNext;
+    }
+
+    function mostrarMovimientos(movimientos) {
+        if (movimientos.length === 0) {
+            historialBody.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-slate-500">No hay movimientos para mostrar.</td></tr>';
             return;
         }
-        cargarCuenta(id);
-    });
+        const etiquetasTipo = { DEPOSITO: 'Depósito', RETIRO: 'Retiro', TRANSFERENCIA: 'Transferencia' };
+        historialBody.innerHTML = movimientos.map(movimiento => {
+            const entrada = movimiento.direccion === 'ENTRADA';
+            const claseImporte = entrada ? 'text-emerald-700' : 'text-rose-700';
+            const signo = entrada ? '+' : '−';
+            const cuenta = movimiento.cuentaRelacionada
+                ? `${escaparHtml(movimiento.cuentaRelacionada.titular)} (#${escaparHtml(movimiento.cuentaRelacionada.id)})`
+                : '—';
+            const fechaLocal = new Date(movimiento.fecha);
+            const fecha = Number.isNaN(fechaLocal.getTime()) ? movimiento.fecha
+                : fechaLocal.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+            return `<tr class="hover:bg-slate-50">
+                <td class="whitespace-nowrap px-3 py-3 text-slate-600">${escaparHtml(fecha)}</td>
+                <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-800">${etiquetasTipo[movimiento.tipo] || escaparHtml(movimiento.tipo)}</td>
+                <td class="whitespace-nowrap px-3 py-3 text-slate-600">${entrada ? 'Entrada' : 'Salida'}</td>
+                <td class="whitespace-nowrap px-3 py-3 text-right font-semibold ${claseImporte}">${signo} $ ${escaparHtml(formatearMonto(movimiento.monto))}</td>
+                <td class="whitespace-nowrap px-3 py-3 text-slate-600">${cuenta}</td>
+            </tr>`;
+        }).join('');
+    }
 
-    document.getElementById('depositarForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const monto = parseFloat(new FormData(e.target).get('monto'));
+    async function cargarHistorial(pagina = 0) {
+        if (!cuentaActualId) return;
+        const cuentaIdSolicitada = cuentaActualId;
+        const parametros = new URLSearchParams({ page: String(pagina), size: String(TAMANO_PAGINA_HISTORIAL) });
+        const tipo = document.getElementById('historialTipo').value;
+        const desde = document.getElementById('historialDesde').value;
+        const hasta = document.getElementById('historialHasta').value;
+        if (tipo) parametros.set('tipo', tipo);
+        if (desde) parametros.set('desde', desde);
+        if (hasta) parametros.set('hasta', hasta);
+        historialResumen.textContent = 'Cargando movimientos...';
         try {
-            const resp = await fetch(`${API_BASE}/depositar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idCuenta: cuentaActualId, monto })
-            });
-            const cuenta = await manejarRespuesta(resp);
-            actualizarTarjeta(cuenta);
-            mostrarAlerta('Depósito realizado con éxito', 'success');
-            e.target.reset();
+            const resultado = await manejarRespuesta(await apiFetch(`${API_BASE}/${cuentaIdSolicitada}/transacciones?${parametros}`));
+            if (cuentaIdSolicitada !== cuentaActualId) return;
+            mostrarMovimientos(resultado.content);
+            actualizarControlesHistorial(resultado);
         } catch (err) {
-            mostrarAlerta(err.message || 'Error al depositar', 'error');
+            if (err.status === 401) {
+                mostrarAutenticacion();
+                return;
+            }
+            if (cuentaIdSolicitada !== cuentaActualId) return;
+            historialBody.innerHTML = `<tr><td colspan="5" class="px-3 py-6 text-center text-rose-600">${escaparHtml(err.message || 'Error al cargar los movimientos')}</td></tr>`;
+            historialResumen.textContent = 'No se pudo cargar el historial.';
+            document.getElementById('historialAnteriorBtn').disabled = true;
+            document.getElementById('historialSiguienteBtn').disabled = true;
+        }
+    }
+
+    async function cargarSesion() {
+        try {
+            await cargarTokenCsrf();
+            const usuario = await manejarRespuesta(await apiFetch('/api/auth/me'));
+            document.getElementById('authPanel').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('userControls').classList.remove('hidden');
+            document.getElementById('userControls').classList.add('flex');
+            document.getElementById('usuarioActual').textContent = usuario.usuario;
+            await cargarCuentas(null);
+        } catch (err) {
+            if (err.status === 401) {
+                mostrarAutenticacion();
+                return;
+            }
+            mostrarAutenticacion();
+            mostrarAlerta(err.message || 'No se pudo comprobar la sesión');
+        }
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const datos = Object.fromEntries(new FormData(event.currentTarget));
+        try {
+            await manejarRespuesta(await apiFetch('/api/auth/login', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
+            }));
+            csrfToken = null;
+            await cargarSesion();
+            mostrarAlerta('Sesión iniciada', 'success');
+        } catch (err) {
+            mostrarAlerta(err.message || 'No se pudo iniciar sesión');
         }
     });
 
-    document.getElementById('retirarForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const monto = parseFloat(new FormData(e.target).get('monto'));
+    document.getElementById('registerForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const formulario = event.currentTarget;
+        const datos = Object.fromEntries(new FormData(formulario));
         try {
-            const resp = await fetch(`${API_BASE}/retirar`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idCuenta: cuentaActualId, monto })
-            });
-            const cuenta = await manejarRespuesta(resp);
-            actualizarTarjeta(cuenta);
-            mostrarAlerta('Retiro realizado con éxito', 'success');
-            e.target.reset();
+            await manejarRespuesta(await apiFetch('/api/auth/register', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos)
+            }));
+            csrfToken = null;
+            formulario.reset();
+            await cargarSesion();
+            mostrarAlerta('Usuario creado y sesión iniciada', 'success');
         } catch (err) {
-            mostrarAlerta(err.message || 'Error al retirar', 'error');
+            mostrarAlerta(err.message || 'No se pudo crear el usuario');
         }
     });
 
-    document.getElementById('transferirForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const idDestino = parseInt(formData.get('idDestino'), 10);
-        const monto = parseFloat(formData.get('monto'));
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {
-            const resp = await fetch(`${API_BASE}/transferir`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idOrigen: cuentaActualId, idDestino, monto })
-            });
-            await manejarRespuesta(resp);
-            mostrarAlerta('Transferencia realizada con éxito', 'success');
-            e.target.reset();
-            cargarCuenta(cuentaActualId);
+            await manejarRespuesta(await apiFetch('/api/auth/logout', { method: 'POST' }));
+            csrfToken = null;
+            mostrarAutenticacion();
+            await cargarTokenCsrf();
+            mostrarAlerta('Sesión cerrada', 'success');
         } catch (err) {
-            mostrarAlerta(err.message || 'Error al transferir', 'error');
+            mostrarAlerta(err.message || 'No se pudo cerrar sesión');
         }
     });
 
-    cargarCuenta(cuentaActualId);
+    document.getElementById('cuentaSelector').addEventListener('change', event => cargarCuenta(event.currentTarget.value));
+    document.getElementById('crearCuentaForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const formulario = event.currentTarget;
+        const titular = new FormData(formulario).get('titular');
+        try {
+            const cuenta = await manejarRespuesta(await apiFetch(API_BASE, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ titular })
+            }));
+            formulario.reset();
+            await cargarCuentas(cuenta.id);
+            mostrarAlerta('Cuenta creada con saldo cero', 'success');
+        } catch (err) {
+            mostrarAlerta(err.message || 'No se pudo crear la cuenta');
+        }
+    });
+
+    for (const [formId, endpoint, etiqueta] of [
+        ['depositarForm', '/depositar', 'Depósito'],
+        ['retirarForm', '/retirar', 'Retiro']
+    ]) {
+        document.getElementById(formId).addEventListener('submit', async event => {
+            event.preventDefault();
+            const formulario = event.currentTarget;
+            const monto = Number(new FormData(formulario).get('monto'));
+            try {
+                const cuenta = await manejarRespuesta(await apiFetch(API_BASE + endpoint, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idCuenta: cuentaActualId, monto })
+                }));
+                actualizarTarjeta(cuenta);
+                formulario.reset();
+                mostrarAlerta(`${etiqueta} realizado correctamente`, 'success');
+                await cargarHistorial(0);
+            } catch (err) {
+                mostrarAlerta(err.message || `Error al realizar el ${etiqueta.toLowerCase()}`);
+            }
+        });
+    }
+
+    document.getElementById('transferirForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        const formulario = event.currentTarget;
+        const datos = new FormData(formulario);
+        try {
+            await manejarRespuesta(await apiFetch(API_BASE + '/transferir', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idOrigen: cuentaActualId, idDestino: Number(datos.get('idDestino')), monto: Number(datos.get('monto')) })
+            }));
+            formulario.reset();
+            await cargarCuenta(cuentaActualId);
+            mostrarAlerta('Transferencia realizada correctamente', 'success');
+        } catch (err) {
+            mostrarAlerta(err.message || 'Error al transferir');
+        }
+    });
+
+    document.getElementById('aplicarFiltrosBtn').addEventListener('click', () => cargarHistorial(0));
+    document.getElementById('limpiarFiltrosBtn').addEventListener('click', () => {
+        document.getElementById('historialTipo').value = '';
+        document.getElementById('historialDesde').value = '';
+        document.getElementById('historialHasta').value = '';
+        cargarHistorial(0);
+    });
+    document.getElementById('historialAnteriorBtn').addEventListener('click', () => {
+        if (paginaHistorial > 0) cargarHistorial(paginaHistorial - 1);
+    });
+    document.getElementById('historialSiguienteBtn').addEventListener('click', () => cargarHistorial(paginaHistorial + 1));
+
+    cargarSesion();
 </script>
 </body>
 </html>
